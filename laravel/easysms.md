@@ -85,6 +85,8 @@ return [
 ];
 ```
 
+注意：上面的 `sign_name` 为 aliyun 平台申请 签名管理 的 `签名名称`
+
 4、创建 EasySmsServiceProvider.php 
 
 `php artisan make:provider EasySmsServiceProvider`
