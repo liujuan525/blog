@@ -85,6 +85,18 @@ php bin/magento cache:clean
     php bin/magento setup:static-content:deploy en_AU --exclude-theme Magento/luma --exclude-theme Magento/blank -f
 ```
 
+- 将订单号导出为 csv 样式
+`$order->getIncrementId()."\t"`
+   - 后面加 `\t` 可以解决 csv/xslx 对以 0 开头的字符串自动抹除 0 的操作，但是后面会出现空格
+   - 将导出的 csv 文件转为 txt 文件，打开一个 xlsx 文件，通过 excel 打开 txt 文件，将文件按照格式另存为 xlsx 文件，记得选择 文本 ，即可正常显示
+
+- 给数据表添加外键：
+   - 两个关联字段的数据类型及数据长度必须一致
+   - 设置的那个字段必须是外键
+   - 两个字段类型必须：无符号
+   - 数据表中必须无垃圾数据（字表里面的字段父表必须存在）
+
+
 
 
 ### 常用代码
