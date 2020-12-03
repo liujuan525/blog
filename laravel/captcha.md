@@ -1,6 +1,6 @@
 #### 图片验证码
 
-- composer 安装 gregwar/captcha
+- `composer` 安装 `gregwar/captcha`
 
  `composer require gregwar/captcha`
 
