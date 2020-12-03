@@ -1,6 +1,6 @@
 ## laravel 笔记
 
-#### 一、修改数据表字段，`php artisan migrate` 报错
+#### 修改数据表字段，`php artisan migrate` 报错
 
 1. 修改数据表字段属性，需要 **doctrine/dbal** 组件
  - 安装命令：
