@@ -7,7 +7,8 @@
 `composer require doctrine/dbal`
 
 2. 执行过上面的命令后，如果执行 `php artisan migrate` 还是报错
-```
+
+```diff
 Migrating: 2020_12_02_201423_add_phone_to_users_table
 
    Error
@@ -19,18 +20,10 @@ Migrating: 2020_12_02_201423_add_phone_to_users_table
     61|      */
     62|     protected function getDoctrineDriver()
     63|     {
-  > 64|         return new DoctrineDriver;
+!   64|         return new DoctrineDriver;
     65|     }
     66| }
     67|
-
-      +8 vendor frames
-  9   database/migrations/2020_12_02_201423_add_phone_to_users_table.php:14
-      Illuminate\Support\Facades\Facade::__callStatic("table")
-
-      +21 vendor frames
-  31  artisan:37
-      Illuminate\Foundation\Console\Kernel::handle(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
 ```
 
  - 则可能原因是 **doctrine/dbal** 版本太高
@@ -40,8 +33,8 @@ Migrating: 2020_12_02_201423_add_phone_to_users_table
 二、form 表单正则校验，返回首页代码
 
 1. 在进行正则校验的时候，如果输入错误的手机号，则会跳转到首页面
-![form_regex](/images/sms_1.jpg)
-![form_regex](/images/sms_2.jpg)
+![form_regex](../images/laravel/sms_1.jpg)
+![form_regex](../images/laravel/sms_2.jpg)
 2. 原因是没有设置请求的 **header** 头
 3. 增加设置 **header** 头的中间件
  1. 执行命令：`php artisan make:middleware AcceptHeader`
@@ -82,5 +75,5 @@ protected $middlewareGroups = [
 ```
 
   4. 重新请求，效果如下
-  ![form_regex](/images/sms_3.jpg)
+  ![form_regex](../images/laravel/sms_3.jpg)
 
