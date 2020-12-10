@@ -69,10 +69,10 @@ sudo apt-get remove elasticsearch
 ### 使用 **Navicat** 连接 **mysql** 数据库
 
 1. 此处的 host 为 mysql 镜像在 homestead 虚拟机中 docker 中的 ip 地址
-  ![mysql_1](/images/mysql_1.png)
+  ![mysql_1](../images/magento/mysql_1.png)
 
 2. 此处的 host 为虚拟机的 ip 地址
-  ![mysql_2](/images/mysql_2.png)
+  ![mysql_2](../images/magento/mysql_2.png)
 
 记得在虚拟机中配置项目访问地址(在 **Homestead.yaml 文件**)
 
@@ -123,7 +123,7 @@ php bin/magento setup:install \
 
 ### 如果 **GD2** 报错，信息如下：
 
-![gd2_error](/images/gd2.png)
+![gd2_error](../images/magento/gd2.png)
 
 修改 **vendor\magento\framework\Image\Adapter\Gd2.php** 文件中的 *validateURLScheme* 方法，改为：
 
@@ -141,7 +141,7 @@ private function validateURLScheme(string $filename) : bool   {
 
 ### 报错 **memory_limit** 相关错误，如下图：
 
-![memory_limit](/images/memory_limit.png)
+![memory_limit](../images/magento/memory_limit.png)
 
 ```bash
 # 可以在 php 命令后增加 -d memory_limit=-1
@@ -150,19 +150,19 @@ php -d memory_limit=-1  bin/magento s:d:c
 
 ### 成功
 
-![success](/images/success_magento2.4.png)
+![success](../images/magento/success_magento2.4.png)
 
 ### 检测
 
 > 浏览器进行访问 http://maymagento.local/
 
-![check](/images/check_1.jpg)
+![check](../images/magento/check_1.jpg)
 
 在项目目录 **/var/log/exception.log** 文件中查看错误信息
 
 ## **mysql 8.0** 相关问题报错
 
-![error_1](/images/mysql_3.jpg)
+![error_1](../images/magento/mysql_3.jpg)
 
 解决方案(mysql8.0 认证方式不一样)：
 
@@ -192,7 +192,7 @@ sudo docker restart 容器ID
 
 ## 找不到 **host** 报错，信息如下：
 
-![error_2](/images/mysql_4.jpg)
+![error_2](../images/magento/mysql_4.jpg)
 
 解决方案：
 
