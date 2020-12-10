@@ -97,19 +97,261 @@ php bin/magento cache:clean
    - 数据表中必须无垃圾数据（字表里面的字段父表必须存在）
 
 
-
-
 ### 常用代码
+
+<details><summary><b> objectManager </b></summary>
+
+```
+// 获取objectManager 
+$objectManager = \Magento\Framework\App\ObjectManager::getInstance();
+```
+
+</details>
+
+<details><summary><b> 产品相关 </b></summary>
+
+```
+// 获取产品信息
+$product = $objectManager->get(\Magento\Catalog\Api\ProductRepositoryInterface::class)->getById($productId);
+
+/** 产品属性 */
+/* @var \Magento\Catalog\Model\ProductRepository $product */
+$product = $objectManager->create('Magento\Catalog\Model\ProductRepository')->getById($id);
+
+/** 库存 */
+$stockItem  = $this->stockRegistry->getStockItem($productId, $product->getStore()->getWebsiteId());
+$minimumQty = $stockItem->getMinSaleQty();
+
+/** Configurable Product 获取父级产品ID */
+$parentIds = $this->objectManager->get('Magento\ConfigurableProduct\Model\Product\Type\Configurable')
+    ->getParentIdsByChild($productId);
+$parentId  = array_shift($parentIds);
+
+/** Configurable Product 获取子级产品ID */
+$childIds = $this->objectManager->get('Magento\ConfigurableProduct\Model\Product\Type\Configurable')
+    ->getChildrenIds($parentId);
+    
+/** 获取Configurable Product的子产品Collection */
+$collection = $this->objectManager->get('Magento\ConfigurableProduct\Model\Product\Type\Configurable')
+    ->getUsedProducts($product);
+    
+/** 判断是否Configurable Product */
+if ($_product->getTypeId() == \Magento\ConfigurableProduct\Model\Product\Type\Configurable::TYPE_CODE);
+
+/** print price */
+/* @var \Magento\Framework\Pricing\PriceCurrencyInterface $priceCurrency */
+$priceCurrency = $objectManager->get('Magento\Framework\Pricing\PriceCurrencyInterface');
+$priceCurrency->format($product->getData('price'));
+
+/** print option value */
+$product->getResource()->getAttribute('color')->getDefaultFrontendLabel();
+$product->getAttributeText('color');
+
+/** all options */
+$this->helper('Magento\Catalog\Helper\Output')->productAttribute($product, $product->getData('color'), 'color');
+$product->getResource()->getAttribute('color')->getSource()->getAllOptions();
+
+/** save attribute */
+$product->setWeight(1.99)->getResource()->saveAttribute($product, 'weight');
 
 ```
 
-// 获取objectManager 
-$objectManager = \Magento\Framework\App\ObjectManager::getInstance();
+</details> 
 
-$storeManager = $objectManager->get('\Magento\Store\Model\StoreManagerInterface');
+<details><summary><b> 心愿单相关 </b></summary>
 
-// 获取产品信息
-$product = $objectManager->get(\Magento\Catalog\Api\ProductRepositoryInterface::class)->getById($productId);
+```
+// 获取用户心愿单，没有则创建
+// \Magento\Wishlist\Model\WishlistFactory $wishlistFactory
+$wishlist = $this->wishlistFactory->create()->loadByCustomerId($customerId, true);
+```
+
+</details>
+
+<details><summary><b> store 相关 </b></summary>
+
+```
+// 获取当前店铺对象 
+$store = $objectManager->get('Magento\Store\Model\StoreManagerInterface')->getStore();
+```
+
+</details>
+
+<details><summary><b> 购物车相关 </b></summary>
+
+```
+// 购物车相关类引用 获购物车相关信息 
+$cart = \Magento\Checkout\Model\Cart::getInstance;
+$this->quote = $cart->getQuote();
+
+// e.q
+$items = $this->quote->getAllVisibleItems();
+$totalItems = $this->quote->getItemsCount();
+$grandTotal = $this->quote->getGrandTotal();
+$shippingAddress = $this->quote->getShippingAddress();
+
+/** 购物车中的所有产品 */
+/* @var \Magento\Checkout\Model\Session $checkoutSession */
+$checkoutSession = $objectManager->get('Magento\Checkout\Model\Session');
+foreach ($checkoutSession->getQuote()->getItems() as $item) {
+    /* @var \Magento\Quote\Model\Quote\Item $item */
+    echo $item->getProduct()->getName() . '<br/>';
+}
+
+```
+
+</details>
+
+<details><summary><b> 订单相关 </b></summary>
+
+```
+
+//\Magento\Sales\Model\OrderFactory $orderFactory
+/**@var $order \Magento\Sales\Model\Order */
+$order = $this->_orderFactory->create()->loadByIncrementId($params['order_bn']);
+
+/**
+ * @var \Magento\Sales\Model\ResourceModel\Order\CollectionFactory
+ */
+$this->_relatedOrders = $this->_orderCollectionFactory->create()->addFieldToSelect(
+    '*'
+)->addFieldToFilter(
+    'customer_id',
+    (int)$this->_customerSession->getCustomerId()
+)->addFieldToFilter(
+    'status',
+    ['in' => $this->_orderConfig->getVisibleOnFrontStatuses()]
+)->setOrder(
+    'created_at',
+    'desc'
+);
+
+```
+
+</details>
+
+<details><summary><b> EAV 相关 </b></summary>
+
+```
+/** 获取类型配置 */
+$eavConfig->getAttribute('catalog_product', 'price');
+$eavConfig->getEntityType('catalog_product');
+
+/** 获取 EAV 属性所有可选项 */
+/* @var $objectManager \Magento\Framework\App\ObjectManager */
+$eavConfig = $objectManager->get('\Magento\Eav\Model\Config');
+$options   = $eavConfig->getAttribute('[entity_type]', '[attribute_code]')
+    ->getFrontend()->getSelectOptions();
+    
+// 或者
+/* @var $objectManager \Magento\Framework\App\ObjectManager */
+$options = $objectManager->create('Magento\Eav\Model\Attribute')
+    ->load('[attribute_code]', 'attribute_code')->getSource()
+    ->getAllOptions(false);
+
+```
+
+</details>
+
+<details><summary><b> 缩略图 </b></summary>
+
+```
+/** 产品缩略图 */
+$imageHelper  = $objectManager->get('Magento\Catalog\Helper\Image');
+$productImage = $imageHelper->init($product, 'category_page_list')
+    ->constrainOnly(FALSE)
+    ->keepAspectRatio(TRUE)
+    ->keepFrame(FALSE)
+    ->resize(400)
+    ->getUrl();
+    
+/** 缩略图 */
+$imageFactory = $objectManager->get('Magento\Framework\Image\Factory');
+$imageAdapter = $imageFactory->create($path);
+$imageAdapter->resize($width, $height);
+$imageAdapter->save($savePath);
+
+```
+
+</details>
+
+<details><summary><b> 文件相关 </b></summary>
+
+```
+/** 文件操作 */
+/* @var \Magento\Framework\Filesystem $fileSystem */
+$fileSystem = $this->_objectManager->get('Magento\Framework\Filesystem');
+$fileSystem->getDirectoryWrite('tmp')->copyFile($from, $to);
+$fileSystem->getDirectoryWrite('tmp')->delete($file);
+$fileSystem->getDirectoryWrite('tmp')->create($file);
+
+/** 文件上传 */
+// 上传到media
+$request = $this->getRequest();
+if ($request->isPost()) {
+    try {
+        /* @var $uploader \Magento\MediaStorage\Model\File\Uploader */
+        $uploader = $this->_objectManager->create(
+            'Magento\MediaStorage\Model\File\Uploader',
+            ['fileId' => 'personal_photos']
+        );
+        /* @var $filesystem \Magento\Framework\Filesystem */
+        $filesystem = $this->_objectManager->get('Magento\Framework\Filesystem');
+        $dir        = $filesystem->getDirectoryRead(\Magento\Framework\App\Filesystem\DirectoryList::UPLOAD)->getAbsolutePath();
+        $fileName   = time() . '.' . $uploader->getFileExtension();
+        $uploader->save($dir, $fileName);
+        $fileUrl = 'pub/media/upload/' . $fileName;
+    } catch (Exception $e) {
+        // 未上传
+    }
+}
+
+/** 上传到tmp */
+/* @var \Magento\Framework\App\Filesystem\DirectoryList $directory */
+$directory = $this->_objectManager->get('Magento\Framework\App\Filesystem\DirectoryList');
+/* @var \Magento\Framework\File\Uploader $uploader */
+$uploader = $this->_objectManager->create('Magento\Framework\File\Uploader', array('fileId' => 'file1'));
+$uploader->setAllowedExtensions(array('csv'));
+$uploader->setAllowRenameFiles(true);
+$uploader->setFilesDispersion(true);
+$result = $uploader->save($directory->getPath($directory::TMP));
+$directory->getPath($directory::TMP) . $result['file'];
+
+```
+
+</details>
+
+<details><summary><b> HTML表单元素 </b></summary>
+
+```
+// 日历控件
+$block->getLayout()->createBlock('Magento\Framework\View\Element\Html\Date')
+    ->setName('date')
+    ->setId('date')
+    ->setClass('date')
+    ->setDateFormat('M/d/yy')
+    ->setImage($block->getViewFileUrl('Magento_Theme::calendar.png'))
+    ->setExtraParams('data-validate="{required:true}"')
+    ->toHtml();
+
+// select控件 
+$block->getLayout()->createBlock('Magento\Framework\View\Element\Html\Select')
+    ->setName('sel1')
+    ->setId('sel1')
+    ->setClass('select')
+    ->addOption('value', 'label')
+    ->setValue($default)
+    ->setExtraParams('data-validate="{required:true}"')
+    ->toHtml();
+
+```
+
+</details>
+
+<details><summary><b> 其他代码 </b></summary>
+
+```
+
 
 // DataObject是所有Model的基类 
 $row = new \Magento\Framework\DataObject();
@@ -121,14 +363,6 @@ $row->toXml();
 $row->toJson();
 $row->debug();
 
-// 购物车相关类引用 获购物车相关信息 
-$cart = \Magento\Checkout\Model\Cart::getInstance;
-$this->quote = $cart->getQuote();
-// e.q
-$items = $this->quote->getAllVisibleItems();
-$totalItems = $this->quote->getItemsCount();
-$grandTotal = $this->quote->getGrandTotal();
-$shippingAddress = $this->quote->getShippingAddress();
 
 // cache save 
 $this->cache = $context->getCache();
@@ -180,9 +414,6 @@ $coreRegistry->register('current_category', $category);
 /** 提取值 */
 $coreRegistry->registry('current_category');
 
-/** 获取当前店铺对象 */
-$store = $objectManager->get('Magento\Store\Model\StoreManagerInterface')->getStore();
-
 /** 提示信息 */
 // \Magento\Framework\App\Action\Action::execute()
 $this->messageManager->addSuccessMessage(__('You deleted the event.'));
@@ -230,123 +461,6 @@ $reader->getModuleDir('etc', 'Infinity_Project') . '/di.xml';
 $asset = $this->_objectManager->get('\Magento\Framework\View\Asset\Repository');
 $asset->createAsset('Vendor_Module::js/script.js')->getPath();
 
-/** 文件操作 */
-/* @var \Magento\Framework\Filesystem $fileSystem */
-$fileSystem = $this->_objectManager->get('Magento\Framework\Filesystem');
-$fileSystem->getDirectoryWrite('tmp')->copyFile($from, $to);
-$fileSystem->getDirectoryWrite('tmp')->delete($file);
-$fileSystem->getDirectoryWrite('tmp')->create($file);
-
-/** 文件上传 */
-// 上传到media
-$request = $this->getRequest();
-if ($request->isPost()) {
-    try {
-        /* @var $uploader \Magento\MediaStorage\Model\File\Uploader */
-        $uploader = $this->_objectManager->create(
-            'Magento\MediaStorage\Model\File\Uploader',
-            ['fileId' => 'personal_photos']
-        );
-        /* @var $filesystem \Magento\Framework\Filesystem */
-        $filesystem = $this->_objectManager->get('Magento\Framework\Filesystem');
-        $dir        = $filesystem->getDirectoryRead(\Magento\Framework\App\Filesystem\DirectoryList::UPLOAD)->getAbsolutePath();
-        $fileName   = time() . '.' . $uploader->getFileExtension();
-        $uploader->save($dir, $fileName);
-        $fileUrl = 'pub/media/upload/' . $fileName;
-    } catch (Exception $e) {
-        // 未上传
-    }
-}
-
-/** 上传到tmp */
-/* @var \Magento\Framework\App\Filesystem\DirectoryList $directory */
-$directory = $this->_objectManager->get('Magento\Framework\App\Filesystem\DirectoryList');
-/* @var \Magento\Framework\File\Uploader $uploader */
-$uploader = $this->_objectManager->create('Magento\Framework\File\Uploader', array('fileId' => 'file1'));
-$uploader->setAllowedExtensions(array('csv'));
-$uploader->setAllowRenameFiles(true);
-$uploader->setFilesDispersion(true);
-$result = $uploader->save($directory->getPath($directory::TMP));
-$directory->getPath($directory::TMP) . $result['file'];
-
-/** 产品缩略图 */
-$imageHelper  = $objectManager->get('Magento\Catalog\Helper\Image');
-$productImage = $imageHelper->init($product, 'category_page_list')
-    ->constrainOnly(FALSE)
-    ->keepAspectRatio(TRUE)
-    ->keepFrame(FALSE)
-    ->resize(400)
-    ->getUrl();
-    
-/** 缩略图 */
-$imageFactory = $objectManager->get('Magento\Framework\Image\Factory');
-$imageAdapter = $imageFactory->create($path);
-$imageAdapter->resize($width, $height);
-$imageAdapter->save($savePath);
-
-/** 产品属性 */
-/* @var \Magento\Catalog\Model\ProductRepository $product */
-$product = $objectManager->create('Magento\Catalog\Model\ProductRepository')->getById($id);
-
-/** print price */
-/* @var \Magento\Framework\Pricing\PriceCurrencyInterface $priceCurrency */
-$priceCurrency = $objectManager->get('Magento\Framework\Pricing\PriceCurrencyInterface');
-$priceCurrency->format($product->getData('price'));
-
-/** print option value */
-$product->getResource()->getAttribute('color')->getDefaultFrontendLabel();
-$product->getAttributeText('color');
-
-/** all options */
-$this->helper('Magento\Catalog\Helper\Output')->productAttribute($product, $product->getData('color'), 'color');
-$product->getResource()->getAttribute('color')->getSource()->getAllOptions();
-
-/** save attribute */
-$product->setWeight(1.99)->getResource()->saveAttribute($product, 'weight');
-
-/** 库存 */
-$stockItem  = $this->stockRegistry->getStockItem($productId, $product->getStore()->getWebsiteId());
-$minimumQty = $stockItem->getMinSaleQty();
-
-/** Configurable Product 获取父级产品ID */
-$parentIds = $this->objectManager->get('Magento\ConfigurableProduct\Model\Product\Type\Configurable')
-    ->getParentIdsByChild($productId);
-$parentId  = array_shift($parentIds);
-
-/** Configurable Product 获取子级产品ID */
-$childIds = $this->objectManager->get('Magento\ConfigurableProduct\Model\Product\Type\Configurable')
-    ->getChildrenIds($parentId);
-    
-/** 获取Configurable Product的子产品Collection */
-$collection = $this->objectManager->get('Magento\ConfigurableProduct\Model\Product\Type\Configurable')
-    ->getUsedProducts($product);
-    
-/** 判断是否Configurable Product */
-if ($_product->getTypeId() == \Magento\ConfigurableProduct\Model\Product\Type\Configurable::TYPE_CODE);
-
-/** 购物车中的所有产品 */
-/* @var \Magento\Checkout\Model\Session $checkoutSession */
-$checkoutSession = $objectManager->get('Magento\Checkout\Model\Session');
-foreach ($checkoutSession->getQuote()->getItems() as $item) {
-    /* @var \Magento\Quote\Model\Quote\Item $item */
-    echo $item->getProduct()->getName() . '<br/>';
-}
-
-/** 获取类型配置 */
-$eavConfig->getAttribute('catalog_product', 'price');
-$eavConfig->getEntityType('catalog_product');
-
-/** 获取 EAV 属性所有可选项 */
-/* @var $objectManager \Magento\Framework\App\ObjectManager */
-$eavConfig = $objectManager->get('\Magento\Eav\Model\Config');
-$options   = $eavConfig->getAttribute('[entity_type]', '[attribute_code]')
-    ->getFrontend()->getSelectOptions();
-    
-// 或者
-/* @var $objectManager \Magento\Framework\App\ObjectManager */
-$options = $objectManager->create('Magento\Eav\Model\Attribute')
-    ->load('[attribute_code]', 'attribute_code')->getSource()
-    ->getAllOptions(false);
 
 /** 获取config.xml与system.xml里的参数 */
 $this->_scopeConfig = $this->_objectManager->create('Magento\Framework\App\Config\ScopeConfigInterface');
@@ -452,59 +566,9 @@ $this->getResponse()->setRedirect($this->_redirect->getRedirectUrl());
 );
 \Magento\Framework\Profiler::stop('CONFIGURABLE:' . __METHOD__);
 
-/** HTML表单元素 */
-// 日历控件
-$block->getLayout()->createBlock('Magento\Framework\View\Element\Html\Date')
-    ->setName('date')
-    ->setId('date')
-    ->setClass('date')
-    ->setDateFormat('M/d/yy')
-    ->setImage($block->getViewFileUrl('Magento_Theme::calendar.png'))
-    ->setExtraParams('data-validate="{required:true}"')
-    ->toHtml();
-
-/** select控件 */
-$block->getLayout()->createBlock('Magento\Framework\View\Element\Html\Select')
-    ->setName('sel1')
-    ->setId('sel1')
-    ->setClass('select')
-    ->addOption('value', 'label')
-    ->setValue($default)
-    ->setExtraParams('data-validate="{required:true}"')
-    ->toHtml();
-
-/**
- * 查找文件
- * find / -name 'flag.frm'
- */
-
-//\Magento\Sales\Model\OrderFactory $orderFactory
-/**@var $order \Magento\Sales\Model\Order */
-$order = $this->_orderFactory->create()->loadByIncrementId($params['order_bn']);
-
-/**
- * @var \Magento\Sales\Model\ResourceModel\Order\CollectionFactory
- */
-$this->_relatedOrders = $this->_orderCollectionFactory->create()->addFieldToSelect(
-    '*'
-)->addFieldToFilter(
-    'customer_id',
-    (int)$this->_customerSession->getCustomerId()
-)->addFieldToFilter(
-    'status',
-    ['in' => $this->_orderConfig->getVisibleOnFrontStatuses()]
-)->setOrder(
-    'created_at',
-    'desc'
-);
-
-
-
-
 ```
 
-
-
+</details>
 
 
 
