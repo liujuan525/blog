@@ -38,8 +38,9 @@
 
 ## Magento
 - [magento笔记](https://github.com/liujuan525/blog/blob/main/magento/magentoNote.md)
+- [magento笔记](https://github.com/liujuan525/blog/blob/main/magento/magentoNote.md)
 - [magento插件](https://github.com/liujuan525/blog/blob/main/magento/magentoPlugin.md)
-- [magento学习](https://github.com/liujuan525/blog/blob/main/magento/magentoStudy.md)
+- [magento2.4安装笔记](https://github.com/liujuan525/blog/blob/main/magento/magento2.4_environment.md)
 
 
 
